@@ -1,0 +1,1274 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>1327 Coffee Shop — Virar West</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;0,900;1,400;1,700&family=DM+Sans:wght@300;400;500&family=Cormorant+Garamond:ital,wght@0,300;0,600;1,300;1,600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --cream: #F5EFE0;
+    --espresso: #1A0F00;
+    --coffee: #3D1F00;
+    --caramel: #C47C2B;
+    --gold: #E8A640;
+    --mocha: #6B3A1F;
+    --steam: #EDE5D0;
+    --ink: #0E0800;
+  }
+
+  *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    background: var(--espresso);
+    color: var(--cream);
+    font-family: 'DM Sans', sans-serif;
+    font-weight: 300;
+    overflow-x: hidden;
+    cursor: none;
+  }
+
+  /* Custom Cursor */
+  .cursor {
+    position: fixed;
+    width: 10px; height: 10px;
+    background: var(--gold);
+    border-radius: 50%;
+    pointer-events: none;
+    z-index: 9999;
+    transition: transform 0.15s ease, background 0.2s;
+    transform: translate(-50%, -50%);
+  }
+  .cursor-ring {
+    position: fixed;
+    width: 36px; height: 36px;
+    border: 1px solid rgba(232,166,64,0.5);
+    border-radius: 50%;
+    pointer-events: none;
+    z-index: 9998;
+    transition: transform 0.4s cubic-bezier(0.23,1,0.32,1), width 0.3s, height 0.3s, opacity 0.3s;
+    transform: translate(-50%, -50%);
+  }
+
+  /* NAV */
+  nav {
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    z-index: 100;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1.5rem 4rem;
+    background: linear-gradient(to bottom, rgba(26,15,0,0.95), transparent);
+    transition: background 0.4s;
+  }
+  nav.scrolled {
+    background: rgba(26,15,0,0.98);
+    border-bottom: 1px solid rgba(232,166,64,0.15);
+    backdrop-filter: blur(10px);
+  }
+  .nav-logo {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 1.6rem;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    color: var(--gold);
+  }
+  .nav-logo span { color: var(--cream); font-weight: 300; font-style: italic; }
+  .nav-links {
+    display: flex;
+    gap: 2.5rem;
+    list-style: none;
+  }
+  .nav-links a {
+    color: rgba(245,239,224,0.7);
+    text-decoration: none;
+    font-size: 0.82rem;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    transition: color 0.3s;
+    position: relative;
+  }
+  .nav-links a::after {
+    content: '';
+    position: absolute;
+    bottom: -4px; left: 0;
+    width: 0; height: 1px;
+    background: var(--gold);
+    transition: width 0.3s;
+  }
+  .nav-links a:hover { color: var(--gold); }
+  .nav-links a:hover::after { width: 100%; }
+  .nav-reserve {
+    background: transparent;
+    border: 1px solid var(--gold);
+    color: var(--gold);
+    padding: 0.55rem 1.4rem;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.78rem;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    cursor: none;
+    transition: background 0.3s, color 0.3s;
+  }
+  .nav-reserve:hover { background: var(--gold); color: var(--espresso); }
+
+  /* HERO */
+  .hero {
+    position: relative;
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    overflow: hidden;
+  }
+  .hero-bg {
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(ellipse at 30% 60%, rgba(196,124,43,0.18) 0%, transparent 60%),
+                radial-gradient(ellipse at 80% 20%, rgba(107,58,31,0.25) 0%, transparent 50%),
+                linear-gradient(135deg, #0E0800 0%, #1A0F00 40%, #2A1400 100%);
+  }
+  .hero-grain {
+    position: absolute;
+    inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 512 512' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+    opacity: 0.6;
+    pointer-events: none;
+  }
+
+  /* Floating coffee rings */
+  .ring {
+    position: absolute;
+    border-radius: 50%;
+    border: 1px solid rgba(196,124,43,0.12);
+    animation: float-ring 12s ease-in-out infinite;
+  }
+  .ring:nth-child(1) { width: 500px; height: 500px; top: -100px; right: -100px; animation-delay: 0s; }
+  .ring:nth-child(2) { width: 300px; height: 300px; bottom: 10%; left: -80px; animation-delay: -4s; border-color: rgba(196,124,43,0.08); }
+  .ring:nth-child(3) { width: 180px; height: 180px; top: 20%; right: 25%; animation-delay: -8s; border-color: rgba(232,166,64,0.1); }
+  @keyframes float-ring {
+    0%, 100% { transform: translateY(0) scale(1); }
+    50% { transform: translateY(-20px) scale(1.02); }
+  }
+
+  .hero-content {
+    position: relative;
+    z-index: 2;
+    padding: 0 4rem;
+    padding-top: 8rem;
+    max-width: 780px;
+  }
+  .hero-eyebrow {
+    font-size: 0.72rem;
+    letter-spacing: 0.35em;
+    text-transform: uppercase;
+    color: var(--gold);
+    margin-bottom: 1.8rem;
+    opacity: 0;
+    animation: fade-up 1s 0.3s forwards;
+  }
+  .hero-title {
+    font-family: 'Playfair Display', serif;
+    font-size: clamp(4rem, 9vw, 8rem);
+    font-weight: 900;
+    line-height: 0.9;
+    color: var(--cream);
+    margin-bottom: 2rem;
+    opacity: 0;
+    animation: fade-up 1s 0.5s forwards;
+  }
+  .hero-title em {
+    font-style: italic;
+    color: var(--gold);
+    font-weight: 400;
+  }
+  .hero-sub {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 1.35rem;
+    font-style: italic;
+    color: rgba(245,239,224,0.65);
+    line-height: 1.7;
+    max-width: 480px;
+    margin-bottom: 3rem;
+    opacity: 0;
+    animation: fade-up 1s 0.7s forwards;
+  }
+  .hero-ctas {
+    display: flex;
+    gap: 1.2rem;
+    opacity: 0;
+    animation: fade-up 1s 0.9s forwards;
+  }
+  .btn-primary {
+    background: var(--gold);
+    color: var(--espresso);
+    padding: 0.9rem 2.2rem;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.82rem;
+    font-weight: 500;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    text-decoration: none;
+    transition: background 0.3s, transform 0.3s;
+    display: inline-block;
+  }
+  .btn-primary:hover { background: var(--caramel); transform: translateY(-2px); }
+  .btn-ghost {
+    border: 1px solid rgba(245,239,224,0.3);
+    color: var(--cream);
+    padding: 0.9rem 2.2rem;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.82rem;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    text-decoration: none;
+    transition: border-color 0.3s, color 0.3s, transform 0.3s;
+    display: inline-block;
+  }
+  .btn-ghost:hover { border-color: var(--gold); color: var(--gold); transform: translateY(-2px); }
+
+  .hero-badge {
+    position: absolute;
+    right: 6%;
+    bottom: 12%;
+    z-index: 2;
+    text-align: center;
+    opacity: 0;
+    animation: fade-in 1.2s 1.3s forwards;
+  }
+  .badge-circle {
+    width: 130px; height: 130px;
+    border: 1px solid rgba(232,166,64,0.4);
+    border-radius: 50%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 2px;
+    animation: slow-spin 20s linear infinite;
+  }
+  .badge-circle .num {
+    font-family: 'Playfair Display', serif;
+    font-size: 2.2rem;
+    font-weight: 900;
+    color: var(--gold);
+    line-height: 1;
+  }
+  .badge-circle .label {
+    font-size: 0.6rem;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: rgba(245,239,224,0.5);
+  }
+  @keyframes slow-spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+  }
+
+  /* Scroll indicator */
+  .scroll-hint {
+    position: absolute;
+    bottom: 3rem;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    opacity: 0;
+    animation: fade-in 1s 1.5s forwards;
+  }
+  .scroll-hint span { font-size: 0.6rem; letter-spacing: 0.3em; text-transform: uppercase; color: rgba(245,239,224,0.4); }
+  .scroll-line { width: 1px; height: 40px; background: linear-gradient(to bottom, rgba(232,166,64,0.6), transparent); animation: scroll-anim 2s ease-in-out infinite; }
+  @keyframes scroll-anim {
+    0% { transform: scaleY(0); transform-origin: top; }
+    50% { transform: scaleY(1); transform-origin: top; }
+    51% { transform: scaleY(1); transform-origin: bottom; }
+    100% { transform: scaleY(0); transform-origin: bottom; }
+  }
+
+  @keyframes fade-up {
+    from { opacity: 0; transform: translateY(30px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  @keyframes fade-in {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+
+  /* DIVIDER */
+  .divider {
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+    margin: 0 4rem 4rem;
+    color: rgba(196,124,43,0.4);
+  }
+  .divider::before, .divider::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: rgba(196,124,43,0.2);
+  }
+  .divider-diamond {
+    width: 8px; height: 8px;
+    background: var(--caramel);
+    transform: rotate(45deg);
+    opacity: 0.6;
+  }
+
+  /* ABOUT */
+  .about {
+    padding: 8rem 4rem;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 6rem;
+    align-items: center;
+    position: relative;
+  }
+  .about-text .section-label {
+    font-size: 0.68rem;
+    letter-spacing: 0.35em;
+    text-transform: uppercase;
+    color: var(--gold);
+    margin-bottom: 1.5rem;
+    display: block;
+  }
+  .about-text h2 {
+    font-family: 'Playfair Display', serif;
+    font-size: clamp(2.5rem, 4vw, 3.8rem);
+    font-weight: 700;
+    line-height: 1.15;
+    margin-bottom: 2rem;
+    color: var(--cream);
+  }
+  .about-text h2 em { font-style: italic; color: var(--gold); font-weight: 400; }
+  .about-text p {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 1.15rem;
+    line-height: 1.85;
+    color: rgba(245,239,224,0.7);
+    margin-bottom: 1.4rem;
+  }
+  .about-stats {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 2rem;
+    margin-top: 3rem;
+  }
+  .stat {
+    border-top: 1px solid rgba(196,124,43,0.25);
+    padding-top: 1.2rem;
+  }
+  .stat .num {
+    font-family: 'Playfair Display', serif;
+    font-size: 2.5rem;
+    font-weight: 900;
+    color: var(--gold);
+    line-height: 1;
+    margin-bottom: 0.4rem;
+  }
+  .stat .label { font-size: 0.75rem; letter-spacing: 0.1em; color: rgba(245,239,224,0.5); text-transform: uppercase; }
+
+  .about-visual {
+    position: relative;
+    height: 550px;
+  }
+  .about-card {
+    position: absolute;
+    background: rgba(61,31,0,0.6);
+    border: 1px solid rgba(196,124,43,0.2);
+    backdrop-filter: blur(10px);
+    padding: 2rem;
+    transition: transform 0.4s;
+  }
+  .about-card:hover { transform: translateY(-6px); }
+  .about-card.main {
+    width: 75%; top: 0; right: 0;
+    height: 340px;
+    background: linear-gradient(135deg, rgba(107,58,31,0.5), rgba(61,31,0,0.8));
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+  }
+  .about-card.main .card-icon {
+    font-size: 4rem;
+    margin-bottom: auto;
+    display: block;
+  }
+  .about-card.main h3 {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.6rem;
+    font-weight: 700;
+    color: var(--cream);
+    margin-bottom: 0.5rem;
+  }
+  .about-card.main p {
+    font-size: 0.85rem;
+    color: rgba(245,239,224,0.6);
+    line-height: 1.6;
+  }
+  .about-card.accent {
+    width: 55%;
+    bottom: 0; left: 0;
+    padding: 1.5rem;
+    background: var(--coffee);
+    border-color: rgba(196,124,43,0.3);
+  }
+  .about-card.accent .rating { font-size: 1rem; margin-bottom: 0.8rem; }
+  .about-card.accent .stars { color: var(--gold); font-size: 1.1rem; letter-spacing: 2px; }
+  .about-card.accent blockquote {
+    font-family: 'Cormorant Garamond', serif;
+    font-style: italic;
+    font-size: 1rem;
+    line-height: 1.6;
+    color: rgba(245,239,224,0.75);
+    border-left: 2px solid var(--caramel);
+    padding-left: 1rem;
+    margin-top: 0.8rem;
+  }
+  .about-card.tag {
+    width: auto;
+    top: 55%; right: -2%;
+    padding: 1rem 1.4rem;
+    background: var(--caramel);
+    border: none;
+  }
+  .about-card.tag span {
+    font-size: 0.72rem;
+    font-weight: 500;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--espresso);
+  }
+
+  /* MENU */
+  .menu-section {
+    padding: 6rem 4rem;
+    background: rgba(255,255,255,0.02);
+    border-top: 1px solid rgba(196,124,43,0.1);
+    border-bottom: 1px solid rgba(196,124,43,0.1);
+  }
+  .section-header {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    margin-bottom: 4rem;
+  }
+  .section-header .left .label {
+    font-size: 0.68rem;
+    letter-spacing: 0.35em;
+    text-transform: uppercase;
+    color: var(--gold);
+    display: block;
+    margin-bottom: 0.8rem;
+  }
+  .section-header h2 {
+    font-family: 'Playfair Display', serif;
+    font-size: clamp(2rem, 4vw, 3.2rem);
+    font-weight: 700;
+    color: var(--cream);
+  }
+  .section-header h2 em { font-style: italic; color: var(--gold); }
+  .menu-tabs {
+    display: flex;
+    gap: 0.5rem;
+    background: rgba(255,255,255,0.03);
+    border: 1px solid rgba(196,124,43,0.15);
+    padding: 6px;
+  }
+  .tab {
+    padding: 0.55rem 1.2rem;
+    font-size: 0.76rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: rgba(245,239,224,0.5);
+    background: transparent;
+    border: none;
+    cursor: none;
+    transition: all 0.3s;
+  }
+  .tab.active { background: var(--gold); color: var(--espresso); font-weight: 500; }
+  .tab:hover:not(.active) { color: var(--cream); }
+
+  .menu-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.5px; background: rgba(196,124,43,0.1); }
+  .menu-item {
+    background: #120900;
+    padding: 2rem;
+    position: relative;
+    overflow: hidden;
+    transition: background 0.3s;
+  }
+  .menu-item::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(135deg, rgba(196,124,43,0.08), transparent);
+    opacity: 0;
+    transition: opacity 0.3s;
+  }
+  .menu-item:hover { background: #1a0f00; }
+  .menu-item:hover::before { opacity: 1; }
+  .menu-item .icon { font-size: 2rem; margin-bottom: 1rem; display: block; }
+  .menu-item h4 {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.15rem;
+    font-weight: 700;
+    color: var(--cream);
+    margin-bottom: 0.6rem;
+  }
+  .menu-item p {
+    font-size: 0.82rem;
+    color: rgba(245,239,224,0.45);
+    line-height: 1.6;
+    margin-bottom: 1.2rem;
+  }
+  .menu-item .price {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: var(--gold);
+  }
+  .menu-item .badge-tag {
+    position: absolute;
+    top: 1rem; right: 1rem;
+    font-size: 0.58rem;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    padding: 3px 8px;
+    background: rgba(196,124,43,0.2);
+    color: var(--gold);
+    border: 1px solid rgba(196,124,43,0.3);
+  }
+  .menu-panel { display: none; }
+  .menu-panel.active { display: block; }
+
+  /* AMBIENCE */
+  .ambience {
+    padding: 8rem 4rem;
+    display: grid;
+    grid-template-columns: 1.3fr 1fr;
+    gap: 6rem;
+    align-items: center;
+  }
+  .ambience-gallery {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    grid-template-rows: 200px 200px;
+    gap: 12px;
+  }
+  .ambience-card {
+    background: var(--coffee);
+    border: 1px solid rgba(196,124,43,0.15);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 1rem;
+    transition: transform 0.4s, border-color 0.3s;
+    position: relative;
+    overflow: hidden;
+  }
+  .ambience-card:hover { transform: scale(1.02); border-color: rgba(196,124,43,0.4); }
+  .ambience-card.tall { grid-row: span 2; }
+  .ambience-card .card-emoji { font-size: 3rem; }
+  .ambience-card .card-label { font-size: 0.72rem; letter-spacing: 0.2em; text-transform: uppercase; color: rgba(245,239,224,0.5); }
+  .ambience-card::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(135deg, rgba(196,124,43,0.06), transparent);
+  }
+
+  .ambience-text .section-label { font-size: 0.68rem; letter-spacing: 0.35em; text-transform: uppercase; color: var(--gold); margin-bottom: 1.5rem; display: block; }
+  .ambience-text h2 { font-family: 'Playfair Display', serif; font-size: clamp(2.2rem, 3.5vw, 3rem); font-weight: 700; line-height: 1.2; margin-bottom: 2rem; color: var(--cream); }
+  .ambience-text h2 em { font-style: italic; color: var(--gold); font-weight: 400; }
+  .ambience-text p { font-family: 'Cormorant Garamond', serif; font-size: 1.1rem; line-height: 1.85; color: rgba(245,239,224,0.65); margin-bottom: 1.2rem; }
+
+  .features-list { display: flex; flex-direction: column; gap: 1rem; margin-top: 2rem; }
+  .feature { display: flex; align-items: center; gap: 1rem; padding: 1rem 1.2rem; border: 1px solid rgba(196,124,43,0.12); background: rgba(61,31,0,0.3); }
+  .feature-icon { font-size: 1.4rem; }
+  .feature-text h5 { font-size: 0.82rem; font-weight: 500; color: var(--cream); margin-bottom: 2px; }
+  .feature-text p { font-size: 0.75rem; color: rgba(245,239,224,0.45); }
+
+  /* REVIEWS */
+  .reviews {
+    padding: 7rem 4rem;
+    background: linear-gradient(to bottom, rgba(61,31,0,0.15), transparent);
+    border-top: 1px solid rgba(196,124,43,0.08);
+  }
+  .reviews-header { text-align: center; margin-bottom: 4rem; }
+  .reviews-header .label { font-size: 0.68rem; letter-spacing: 0.35em; text-transform: uppercase; color: var(--gold); margin-bottom: 1rem; display: block; }
+  .reviews-header h2 { font-family: 'Playfair Display', serif; font-size: clamp(2rem, 3.5vw, 3rem); font-weight: 700; color: var(--cream); }
+  .reviews-header h2 em { font-style: italic; color: var(--gold); }
+
+  .reviews-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.5rem; }
+  .review-card {
+    background: rgba(26,15,0,0.8);
+    border: 1px solid rgba(196,124,43,0.12);
+    padding: 2rem;
+    position: relative;
+    transition: transform 0.3s, border-color 0.3s;
+  }
+  .review-card:hover { transform: translateY(-4px); border-color: rgba(196,124,43,0.3); }
+  .review-card .quote-mark {
+    font-family: 'Playfair Display', serif;
+    font-size: 5rem;
+    line-height: 0.5;
+    color: rgba(196,124,43,0.2);
+    margin-bottom: 1.2rem;
+    display: block;
+  }
+  .review-card .stars { color: var(--gold); font-size: 0.9rem; letter-spacing: 3px; margin-bottom: 1rem; }
+  .review-card p { font-family: 'Cormorant Garamond', serif; font-style: italic; font-size: 1.05rem; line-height: 1.7; color: rgba(245,239,224,0.75); margin-bottom: 1.5rem; }
+  .reviewer { display: flex; align-items: center; gap: 0.8rem; border-top: 1px solid rgba(196,124,43,0.12); padding-top: 1.2rem; }
+  .reviewer-avatar { width: 38px; height: 38px; border-radius: 50%; background: var(--coffee); display: flex; align-items: center; justify-content: center; font-size: 1rem; border: 1px solid rgba(196,124,43,0.2); }
+  .reviewer-name { font-size: 0.82rem; font-weight: 500; color: var(--cream); }
+  .reviewer-date { font-size: 0.7rem; color: rgba(245,239,224,0.35); }
+
+  /* LOCATION & HOURS */
+  .info-section {
+    padding: 6rem 4rem;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 4rem;
+  }
+  .info-card {
+    background: rgba(26,15,0,0.6);
+    border: 1px solid rgba(196,124,43,0.15);
+    padding: 3rem;
+  }
+  .info-card .ic-label { font-size: 0.68rem; letter-spacing: 0.35em; text-transform: uppercase; color: var(--gold); margin-bottom: 1.5rem; display: block; }
+  .info-card h3 { font-family: 'Playfair Display', serif; font-size: 1.8rem; font-weight: 700; color: var(--cream); margin-bottom: 2rem; }
+  .hours-list { display: flex; flex-direction: column; gap: 0.8rem; }
+  .hours-item { display: flex; justify-content: space-between; align-items: center; padding-bottom: 0.8rem; border-bottom: 1px solid rgba(196,124,43,0.08); }
+  .hours-item .day { font-size: 0.82rem; color: rgba(245,239,224,0.55); text-transform: uppercase; letter-spacing: 0.08em; }
+  .hours-item .time { font-family: 'Cormorant Garamond', serif; font-size: 1.05rem; color: var(--cream); }
+  .hours-item .time.today { color: var(--gold); font-weight: 600; }
+
+  .location-details { display: flex; flex-direction: column; gap: 1.5rem; }
+  .loc-item { display: flex; gap: 1rem; align-items: flex-start; }
+  .loc-icon { font-size: 1.3rem; padding-top: 2px; }
+  .loc-text h5 { font-size: 0.78rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--gold); margin-bottom: 0.3rem; }
+  .loc-text p { font-family: 'Cormorant Garamond', serif; font-size: 1.05rem; line-height: 1.5; color: rgba(245,239,224,0.7); }
+  .map-placeholder {
+    margin-top: 2rem;
+    height: 160px;
+    background: rgba(61,31,0,0.4);
+    border: 1px solid rgba(196,124,43,0.15);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.8rem;
+    letter-spacing: 0.1em;
+    color: rgba(245,239,224,0.3);
+    text-transform: uppercase;
+    position: relative;
+    overflow: hidden;
+  }
+  .map-placeholder::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: repeating-linear-gradient(0deg, transparent, transparent 30px, rgba(196,124,43,0.04) 30px, rgba(196,124,43,0.04) 31px),
+                repeating-linear-gradient(90deg, transparent, transparent 30px, rgba(196,124,43,0.04) 30px, rgba(196,124,43,0.04) 31px);
+  }
+  .map-dot { width: 12px; height: 12px; background: var(--gold); border-radius: 50%; position: absolute; animation: pulse 2s ease-in-out infinite; }
+  @keyframes pulse { 0%,100% { box-shadow: 0 0 0 0 rgba(232,166,64,0.5); } 50% { box-shadow: 0 0 0 15px rgba(232,166,64,0); } }
+
+  /* INSTAGRAM STRIP */
+  .instagram-strip {
+    padding: 4rem;
+    border-top: 1px solid rgba(196,124,43,0.1);
+    text-align: center;
+  }
+  .instagram-strip .ig-label { font-size: 0.7rem; letter-spacing: 0.35em; text-transform: uppercase; color: var(--gold); margin-bottom: 2.5rem; display: block; }
+  .ig-grid { display: grid; grid-template-columns: repeat(6, 1fr); gap: 8px; margin-bottom: 2rem; }
+  .ig-tile {
+    aspect-ratio: 1;
+    background: rgba(61,31,0,0.5);
+    border: 1px solid rgba(196,124,43,0.1);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.8rem;
+    transition: transform 0.3s, background 0.3s;
+    cursor: none;
+  }
+  .ig-tile:hover { transform: scale(1.05); background: rgba(107,58,31,0.6); border-color: rgba(196,124,43,0.3); }
+  .ig-handle { font-family: 'Cormorant Garamond', serif; font-style: italic; font-size: 1.1rem; color: rgba(245,239,224,0.5); }
+  .ig-handle a { color: var(--gold); text-decoration: none; }
+
+  /* FOOTER */
+  footer {
+    background: #0A0500;
+    border-top: 1px solid rgba(196,124,43,0.15);
+    padding: 4rem;
+    display: grid;
+    grid-template-columns: 2fr 1fr 1fr;
+    gap: 4rem;
+  }
+  .footer-brand .logo { font-family: 'Cormorant Garamond', serif; font-size: 2rem; font-weight: 600; color: var(--gold); margin-bottom: 0.3rem; display: block; }
+  .footer-brand .tagline { font-family: 'Cormorant Garamond', serif; font-style: italic; font-size: 0.9rem; color: rgba(245,239,224,0.35); margin-bottom: 1.5rem; }
+  .footer-brand p { font-size: 0.82rem; line-height: 1.7; color: rgba(245,239,224,0.35); max-width: 280px; }
+  .footer-col h5 { font-size: 0.7rem; letter-spacing: 0.25em; text-transform: uppercase; color: var(--gold); margin-bottom: 1.5rem; }
+  .footer-col ul { list-style: none; display: flex; flex-direction: column; gap: 0.8rem; }
+  .footer-col ul li a { color: rgba(245,239,224,0.4); text-decoration: none; font-size: 0.82rem; transition: color 0.2s; }
+  .footer-col ul li a:hover { color: var(--cream); }
+  .footer-bottom { border-top: 1px solid rgba(196,124,43,0.08); padding: 1.5rem 4rem; display: flex; justify-content: space-between; align-items: center; }
+  .footer-bottom p { font-size: 0.72rem; color: rgba(245,239,224,0.2); letter-spacing: 0.08em; }
+
+  /* Intersection observer animations */
+  .reveal { opacity: 0; transform: translateY(30px); transition: opacity 0.8s ease, transform 0.8s ease; }
+  .reveal.visible { opacity: 1; transform: translateY(0); }
+  .reveal-left { opacity: 0; transform: translateX(-30px); transition: opacity 0.8s ease, transform 0.8s ease; }
+  .reveal-left.visible { opacity: 1; transform: translateX(0); }
+  .reveal-right { opacity: 0; transform: translateX(30px); transition: opacity 0.8s ease, transform 0.8s ease; }
+  .reveal-right.visible { opacity: 1; transform: translateX(0); }
+
+  @media (max-width: 900px) {
+    nav { padding: 1.2rem 2rem; }
+    .nav-links { display: none; }
+    .hero-content { padding: 0 2rem; padding-top: 7rem; }
+    .about, .ambience, .info-section { grid-template-columns: 1fr; padding: 4rem 2rem; gap: 3rem; }
+    .menu-section, .reviews, .instagram-strip, footer { padding: 4rem 2rem; }
+    .menu-grid, .reviews-grid { grid-template-columns: 1fr; }
+    .ig-grid { grid-template-columns: repeat(3, 1fr); }
+    footer { grid-template-columns: 1fr; gap: 2rem; }
+    .footer-bottom { padding: 1.5rem 2rem; flex-direction: column; gap: 0.5rem; }
+    .hero-badge { display: none; }
+    .section-header { flex-direction: column; align-items: flex-start; gap: 1.5rem; }
+  }
+</style>
+</head>
+<body>
+
+<div class="cursor" id="cursor"></div>
+<div class="cursor-ring" id="cursorRing"></div>
+
+<!-- NAV -->
+<nav id="navbar">
+  <div class="nav-logo">1327 <span>Coffee Shop</span></div>
+  <ul class="nav-links">
+    <li><a href="#about">Story</a></li>
+    <li><a href="#menu">Menu</a></li>
+    <li><a href="#ambience">Ambience</a></li>
+    <li><a href="#reviews">Reviews</a></li>
+    <li><a href="#location">Visit Us</a></li>
+  </ul>
+  <button class="nav-reserve" onclick="document.getElementById('location').scrollIntoView({behavior:'smooth'})">Reserve a Table</button>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-bg"></div>
+  <div class="hero-grain"></div>
+  <div class="ring"></div>
+  <div class="ring"></div>
+  <div class="ring"></div>
+
+  <div class="hero-content">
+    <div class="hero-eyebrow">Est. at Global City · Virar West, Mumbai</div>
+    <h1 class="hero-title">Your <em>Sanctuary</em> of Coffee</h1>
+    <p class="hero-sub">Where premium brews meet pocket-friendly prices, and every cup tells a story worth savouring.</p>
+    <div class="hero-ctas">
+      <a href="#menu" class="btn-primary">Explore Menu</a>
+      <a href="#about" class="btn-ghost">Our Story</a>
+    </div>
+  </div>
+
+  <div class="hero-badge">
+    <div class="badge-circle">
+      <span class="num">4.8</span>
+      <span class="label">Google Rating</span>
+    </div>
+  </div>
+
+  <div class="scroll-hint">
+    <div class="scroll-line"></div>
+    <span>Scroll</span>
+  </div>
+</section>
+
+<div class="divider"><div class="divider-diamond"></div><div class="divider-diamond"></div><div class="divider-diamond"></div></div>
+
+<!-- ABOUT -->
+<section class="about" id="about">
+  <div class="about-text reveal-left">
+    <span class="section-label">Our Story</span>
+    <h2>Not just a café — a <em>refuge</em></h2>
+    <p>Tucked inside Rustomjee Global City, Virar West, 1327 Coffee Shop was born from a simple belief: exceptional coffee shouldn't cost a fortune. Founded by Shubham and Jash, this intimate sanctuary is where Virar comes to breathe, work, and connect.</p>
+    <p>From meticulously pulled espressos to the legendary Vietnamese Iced Coffee and that world-class brownie — every item on our curated menu is crafted with love, precision, and an obsession for quality that punches far above its price point.</p>
+    <div class="about-stats">
+      <div class="stat">
+        <div class="num">4.8★</div>
+        <div class="label">Google Rating</div>
+      </div>
+      <div class="stat">
+        <div class="num">76+</div>
+        <div class="label">Happy Reviews</div>
+      </div>
+      <div class="stat">
+        <div class="num">₹400</div>
+        <div class="label">Avg. for Two</div>
+      </div>
+      <div class="stat">
+        <div class="num">#1</div>
+        <div class="label">Coffee in Virar</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="about-visual reveal-right">
+    <div class="about-card main">
+      <span class="card-icon">☕</span>
+      <h3>Crafted with Precision</h3>
+      <p>Every cup is a symphony of flavors, pulled by a host who is an absolute expert with caffeine-induced artistry.</p>
+    </div>
+    <div class="about-card accent">
+      <div class="rating">
+        <div class="stars">★★★★★</div>
+      </div>
+      <blockquote>"It's a place that feels like home — a caffeinated utopia right here in Virar."</blockquote>
+    </div>
+    <div class="about-card tag">
+      <span>Best in Virar West 🏆</span>
+    </div>
+  </div>
+</section>
+
+<!-- MENU -->
+<section class="menu-section" id="menu">
+  <div class="section-header reveal">
+    <div class="left">
+      <span class="label">What We Serve</span>
+      <h2>The <em>Menu</em></h2>
+    </div>
+    <div class="menu-tabs">
+      <button class="tab active" onclick="switchTab('coffee', this)">Coffee</button>
+      <button class="tab" onclick="switchTab('food', this)">Food</button>
+      <button class="tab" onclick="switchTab('specials', this)">Specials</button>
+    </div>
+  </div>
+
+  <!-- COFFEE TAB -->
+  <div class="menu-panel active" id="tab-coffee">
+    <div class="menu-grid reveal">
+      <div class="menu-item">
+        <span class="icon">☕</span>
+        <h4>Cappuccino</h4>
+        <p>Rich espresso with velvety steamed milk foam — our most celebrated cup.</p>
+        <div class="price">₹120–₹150</div>
+        <span class="badge-tag">Best Seller</span>
+      </div>
+      <div class="menu-item">
+        <span class="icon">🧊</span>
+        <h4>Vietnamese Iced Coffee</h4>
+        <p>Bold drip coffee sweetened with condensed milk over ice — a guest favourite.</p>
+        <div class="price">₹150–₹180</div>
+        <span class="badge-tag">Must Try</span>
+      </div>
+      <div class="menu-item">
+        <span class="icon">🍫</span>
+        <h4>Hot Chocolate</h4>
+        <p>Silky, warming, and deeply chocolatey. Perfect for Virar evenings.</p>
+        <div class="price">₹130–₹160</div>
+      </div>
+      <div class="menu-item">
+        <span class="icon">🫧</span>
+        <h4>Espresso</h4>
+        <p>A clean, concentrated shot of premium beans. Straight up perfection.</p>
+        <div class="price">₹90–₹110</div>
+      </div>
+      <div class="menu-item">
+        <span class="icon">🧋</span>
+        <h4>Cold Coffee</h4>
+        <p>Chilled and refreshing — crafted with the right ice-to-coffee ratio.</p>
+        <div class="price">₹140–₹170</div>
+      </div>
+      <div class="menu-item">
+        <span class="icon">🍵</span>
+        <h4>Filter Coffee</h4>
+        <p>South Indian-style decoction with the perfect blend of strength and sweetness.</p>
+        <div class="price">₹100–₹130</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- FOOD TAB -->
+  <div class="menu-panel" id="tab-food">
+    <div class="menu-grid reveal">
+      <div class="menu-item">
+        <span class="icon">🥪</span>
+        <h4>1327 Special Sandwich</h4>
+        <p>The signature creation — layered flavours that have become a legend in Virar.</p>
+        <div class="price">₹180–₹220</div>
+        <span class="badge-tag">Signature</span>
+      </div>
+      <div class="menu-item">
+        <span class="icon">🥚</span>
+        <h4>Egg Salami Sandwich</h4>
+        <p>Perfectly assembled with fresh eggs and quality salami. Irresistibly good.</p>
+        <div class="price">₹160–₹200</div>
+        <span class="badge-tag">Fan Fav</span>
+      </div>
+      <div class="menu-item">
+        <span class="icon">🍞</span>
+        <h4>English Breakfast</h4>
+        <p>A hearty, well-rounded morning plate to fuel your day the right way.</p>
+        <div class="price">₹220–₹260</div>
+      </div>
+      <div class="menu-item">
+        <span class="icon">🥑</span>
+        <h4>Avocado Toast</h4>
+        <p>Fresh, creamy avocado on artisan toast. A café classic, done brilliantly.</p>
+        <div class="price">₹180–₹220</div>
+      </div>
+      <div class="menu-item">
+        <span class="icon">🧄</span>
+        <h4>Garlic Bread</h4>
+        <p>Crisp, aromatic, and generously buttered. The perfect side companion.</p>
+        <div class="price">₹90–₹120</div>
+      </div>
+      <div class="menu-item">
+        <span class="icon">🍫</span>
+        <h4>Brownie</h4>
+        <p>The legendary out-of-this-world brownie that keeps guests coming back.</p>
+        <div class="price">₹120–₹150</div>
+        <span class="badge-tag">Out of this World</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- SPECIALS TAB -->
+  <div class="menu-panel" id="tab-specials">
+    <div class="menu-grid reveal">
+      <div class="menu-item">
+        <span class="icon">🌅</span>
+        <h4>Sunday Brunch Spread</h4>
+        <p>The must-not-miss weekly ritual — a curated spread of brunch delights.</p>
+        <div class="price">₹350–₹450</div>
+        <span class="badge-tag">Sundays Only</span>
+      </div>
+      <div class="menu-item">
+        <span class="icon">🍮</span>
+        <h4>Chef's Seasonal Special</h4>
+        <p>A rotating creation that showcases what's fresh, local, and inspired.</p>
+        <div class="price">Market Price</div>
+      </div>
+      <div class="menu-item">
+        <span class="icon">☕</span>
+        <h4>1327 Barista's Pick</h4>
+        <p>Ask Shubham or Jash — they'll craft something extraordinary just for you.</p>
+        <div class="price">₹160–₹200</div>
+        <span class="badge-tag">Ask Us</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- AMBIENCE -->
+<section class="ambience" id="ambience">
+  <div class="ambience-gallery reveal-left">
+    <div class="ambience-card tall">
+      <div class="card-emoji">🏡</div>
+      <div class="card-label">Cozy Interiors</div>
+    </div>
+    <div class="ambience-card">
+      <div class="card-emoji">💻</div>
+      <div class="card-label">Work-Friendly</div>
+    </div>
+    <div class="ambience-card">
+      <div class="card-emoji">🌿</div>
+      <div class="card-label">Peaceful Vibes</div>
+    </div>
+  </div>
+
+  <div class="ambience-text reveal-right">
+    <span class="section-label">The Experience</span>
+    <h2>Where Virar comes to <em>breathe</em></h2>
+    <p>Step through the door of 1327 and the aroma of freshly brewed coffee wraps around you like a warm embrace. The intimate setting — tucked inside Global City — offers a world apart from the rush of daily life.</p>
+    <p>Whether you're grinding through a deadline, catching up with a friend over a flat white, or simply stealing a quiet moment with a cappuccino and a brownie, 1327 has you covered.</p>
+
+    <div class="features-list">
+      <div class="feature">
+        <div class="feature-icon">📶</div>
+        <div class="feature-text">
+          <h5>Free Wi-Fi</h5>
+          <p>Work without limits in a space designed for focus</p>
+        </div>
+      </div>
+      <div class="feature">
+        <div class="feature-icon">🪑</div>
+        <div class="feature-text">
+          <h5>Intimate Seating</h5>
+          <p>Cosy corners and relaxed spaces for every mood</p>
+        </div>
+      </div>
+      <div class="feature">
+        <div class="feature-icon">🌤️</div>
+        <div class="feature-text">
+          <h5>Open 10:30 AM Daily</h5>
+          <p>Your daily ritual starts here, every single day</p>
+        </div>
+      </div>
+      <div class="feature">
+        <div class="feature-icon">💰</div>
+        <div class="feature-text">
+          <h5>Premium at Pocket Prices</h5>
+          <p>Quality coffee that doesn't break the bank — ever</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- REVIEWS -->
+<section class="reviews" id="reviews">
+  <div class="reviews-header reveal">
+    <span class="label">What Guests Say</span>
+    <h2>Voices from our <em>community</em></h2>
+  </div>
+
+  <div class="reviews-grid reveal">
+    <div class="review-card">
+      <span class="quote-mark">"</span>
+      <div class="stars">★★★★★</div>
+      <p>This place isn't just a café — it's a sanctuary, a refuge for the burned-out and the caffeine-deprived. You don't just visit 1327 Coffee Shop; you immerse yourself in it.</p>
+      <div class="reviewer">
+        <div class="reviewer-avatar">🙂</div>
+        <div>
+          <div class="reviewer-name">V. M.</div>
+          <div class="reviewer-date">Google Review</div>
+        </div>
+      </div>
+    </div>
+    <div class="review-card">
+      <span class="quote-mark">"</span>
+      <div class="stars">★★★★★</div>
+      <p>The 1327 special sandwich and Vietnamese iced coffee was just awesome. Very reasonable rates and great coffee. Quite surprised after visiting this cafe in Virar.</p>
+      <div class="reviewer">
+        <div class="reviewer-avatar">😊</div>
+        <div>
+          <div class="reviewer-name">Swapnil P.</div>
+          <div class="reviewer-date">Google Review</div>
+        </div>
+      </div>
+    </div>
+    <div class="review-card">
+      <span class="quote-mark">"</span>
+      <div class="stars">★★★★★</div>
+      <p>Had the best cappuccino till date. The egg salami sandwich was so good that I didn't even share it with anyone. The service was amazing — thank you for this.</p>
+      <div class="reviewer">
+        <div class="reviewer-avatar">☕</div>
+        <div>
+          <div class="reviewer-name">Siddhi S.</div>
+          <div class="reviewer-date">Google Review</div>
+        </div>
+      </div>
+    </div>
+    <div class="review-card">
+      <span class="quote-mark">"</span>
+      <div class="stars">★★★★★</div>
+      <p>One of the best coffee places in Virar, if not THE best. Premium quality at pocket-friendly prices. Don't miss out on the Sunday brunches!</p>
+      <div class="reviewer">
+        <div class="reviewer-avatar">🌟</div>
+        <div>
+          <div class="reviewer-name">Mustansir D.</div>
+          <div class="reviewer-date">Google Review</div>
+        </div>
+      </div>
+    </div>
+    <div class="review-card">
+      <span class="quote-mark">"</span>
+      <div class="stars">★★★★★</div>
+      <p>Best place for coffee lovers. As soon as you enter the cafe, that coffee aroma gives you a wake-up punch. The brownie was out of this world. Absolutely love it.</p>
+      <div class="reviewer">
+        <div class="reviewer-avatar">💛</div>
+        <div>
+          <div class="reviewer-name">Chiranjay T.</div>
+          <div class="reviewer-date">Google Review</div>
+        </div>
+      </div>
+    </div>
+    <div class="review-card">
+      <span class="quote-mark">"</span>
+      <div class="stars">★★★★★</div>
+      <p>More than just a coffee shop — it's a place that feels like home, thanks to Shubham and Jash for the warm and inviting atmosphere. Stop by if you're in the area.</p>
+      <div class="reviewer">
+        <div class="reviewer-avatar">🏠</div>
+        <div>
+          <div class="reviewer-name">Manish J.</div>
+          <div class="reviewer-date">Google Review</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- LOCATION & HOURS -->
+<section class="info-section" id="location">
+  <div class="info-card reveal-left">
+    <span class="ic-label">Hours of Operation</span>
+    <h3>Opening Hours</h3>
+    <div class="hours-list">
+      <div class="hours-item">
+        <span class="day">Monday</span>
+        <span class="time">10:30 AM – 10:00 PM</span>
+      </div>
+      <div class="hours-item">
+        <span class="day">Tuesday</span>
+        <span class="time">10:30 AM – 10:00 PM</span>
+      </div>
+      <div class="hours-item">
+        <span class="day">Wednesday</span>
+        <span class="time today">10:30 AM – 10:00 PM ← Today</span>
+      </div>
+      <div class="hours-item">
+        <span class="day">Thursday</span>
+        <span class="time">10:30 AM – 10:00 PM</span>
+      </div>
+      <div class="hours-item">
+        <span class="day">Friday</span>
+        <span class="time">10:30 AM – 11:00 PM</span>
+      </div>
+      <div class="hours-item">
+        <span class="day">Saturday</span>
+        <span class="time">10:30 AM – 11:00 PM</span>
+      </div>
+      <div class="hours-item">
+        <span class="day">Sunday</span>
+        <span class="time" style="color:var(--gold)">10:00 AM – 11:00 PM ✦ Brunch Day</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="info-card reveal-right">
+    <span class="ic-label">Find Us</span>
+    <h3>Location</h3>
+    <div class="location-details">
+      <div class="loc-item">
+        <div class="loc-icon">📍</div>
+        <div class="loc-text">
+          <h5>Address</h5>
+          <p>Plot No. 1327, Rustomjee Global City,<br>Global City Virar, Virar West,<br>Mumbai, Maharashtra 401305</p>
+        </div>
+      </div>
+      <div class="loc-item">
+        <div class="loc-icon">🚇</div>
+        <div class="loc-text">
+          <h5>Nearest Station</h5>
+          <p>Virar Railway Station<br><span style="color:rgba(245,239,224,0.4);font-size:0.85rem">Western Railway Central Line</span></p>
+        </div>
+      </div>
+      <div class="loc-item">
+        <div class="loc-icon">🏗️</div>
+        <div class="loc-text">
+          <h5>Landmark</h5>
+          <p>Opposite Rustomjee Cambridge<br>International School, Global City</p>
+        </div>
+      </div>
+    </div>
+    <div class="map-placeholder">
+      <div class="map-dot"></div>
+      <span style="position:relative;z-index:1">Rustomjee Global City · Virar West</span>
+    </div>
+  </div>
+</section>
+
+<!-- INSTAGRAM -->
+<section class="instagram-strip">
+  <span class="ig-label">Follow the Journey — @1327coffeeshop</span>
+  <div class="ig-grid reveal">
+    <div class="ig-tile">☕</div>
+    <div class="ig-tile">🍫</div>
+    <div class="ig-tile">🥪</div>
+    <div class="ig-tile">🌿</div>
+    <div class="ig-tile">🧊</div>
+    <div class="ig-tile">✨</div>
+  </div>
+  <p class="ig-handle">Find us on Instagram: <a href="https://www.instagram.com/1327coffeeshop/" target="_blank">@1327coffeeshop</a></p>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div class="footer-brand">
+    <span class="logo">1327</span>
+    <div class="tagline">Coffee Shop · Virar West</div>
+    <p>A sanctuary where quality and comfort collide in one blissful, steaming cup. Premium coffee at pocket-friendly prices — right in the heart of Virar.</p>
+  </div>
+  <div class="footer-col">
+    <h5>Navigate</h5>
+    <ul>
+      <li><a href="#about">Our Story</a></li>
+      <li><a href="#menu">Menu</a></li>
+      <li><a href="#ambience">Ambience</a></li>
+      <li><a href="#reviews">Reviews</a></li>
+      <li><a href="#location">Location</a></li>
+    </ul>
+  </div>
+  <div class="footer-col">
+    <h5>Connect</h5>
+    <ul>
+      <li><a href="https://www.instagram.com/1327coffeeshop/" target="_blank">Instagram</a></li>
+      <li><a href="https://www.swiggy.com/restaurants/1327-coffee-shop-virar-west-mumbai-1133263/dineout" target="_blank">Swiggy Dineout</a></li>
+      <li><a href="#">Google Maps</a></li>
+      <li><a href="#">Reserve a Table</a></li>
+    </ul>
+  </div>
+</footer>
+<div class="footer-bottom">
+  <p>© 2025 1327 Coffee Shop · Plot No. 1327, Rustomjee Global City, Virar West</p>
+  <p>Open Daily from 10:30 AM · Rating 4.8★ on Google</p>
+</div>
+
+<script>
+  // Custom cursor
+  const cursor = document.getElementById('cursor');
+  const ring = document.getElementById('cursorRing');
+  let mx = 0, my = 0, rx = 0, ry = 0;
+
+  document.addEventListener('mousemove', e => {
+    mx = e.clientX; my = e.clientY;
+    cursor.style.left = mx + 'px';
+    cursor.style.top = my + 'px';
+  });
+
+  function animateRing() {
+    rx += (mx - rx) * 0.12;
+    ry += (my - ry) * 0.12;
+    ring.style.left = rx + 'px';
+    ring.style.top = ry + 'px';
+    requestAnimationFrame(animateRing);
+  }
+  animateRing();
+
+  // Navbar scroll
+  const navbar = document.getElementById('navbar');
+  window.addEventListener('scroll', () => {
+    navbar.classList.toggle('scrolled', window.scrollY > 60);
+  });
+
+  // Tab switching
+  function switchTab(tab, el) {
+    document.querySelectorAll('.menu-panel').forEach(p => p.classList.remove('active'));
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    document.getElementById('tab-' + tab).classList.add('active');
+    el.classList.add('active');
+  }
+
+  // Intersection Observer
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        entry.target.classList.add('visible');
+      }
+    });
+  }, { threshold: 0.12 });
+
+  document.querySelectorAll('.reveal, .reveal-left, .reveal-right').forEach(el => observer.observe(el));
+</script>
+</body>
+</html>
